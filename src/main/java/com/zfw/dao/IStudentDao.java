@@ -18,4 +18,5 @@ public interface IStudentDao {
 	List<Student> selectAllStudent();
 	
 	List<Student> selectStudentByName(String name);
+	
 }
