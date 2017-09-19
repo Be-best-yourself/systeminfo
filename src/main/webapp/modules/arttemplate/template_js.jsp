@@ -1,0 +1,1 @@
+<script src="${pageContext.request.contextPath}/modules/arttemplate/template-web.js"></script>

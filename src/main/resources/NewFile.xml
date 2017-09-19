@@ -1,0 +1,148 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+	<mvc:default-servlet-handler />
+	<mvc:annotation-driven validator="validator" />
+	<!-- 打包了一系列功能配置，比如支持JSR 303的验证，以及sprng 3的类型转换和字段的格式化等 -->
+	<!-- validator 在common中配置 -->
+	<context:annotation-config />
+	<context:component-scan base-package="com.im,com.gright" />
+	<context:property-placeholder location="classpath:applicationContext.properties" />
+	<mvc:interceptors>
+		<!-- 请求执行时间 -->
+		<bean class="com.im.core.support.handler.ExecuteTimeInterceptor" />
+	</mvc:interceptors>
+	<bean
+		class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+		<property name="messageConverters">
+			<util:list id="beanList">
+				<ref bean="stringHttpMessageConverter" />
+				<ref bean="fastJsonHttpMessageConverter" />
+				<ref bean="resourceHttpMessageConverter" />
+			</util:list>
+		</property>
+	</bean>
+	<bean id="resourceHttpMessageConverter"
+		class="org.springframework.http.converter.ResourceHttpMessageConverter" />
+	<bean id="stringHttpMessageConverter"
+		class="org.springframework.http.converter.StringHttpMessageConverter">
+		<property name="supportedMediaTypes">
+			<list>
+				<value>text/plain;charset=UTF-8</value>
+				<value>text/html;charset=UTF-8</value>
+			</list>
+		</property>
+	</bean>
+	<!-- fastJSON 处理begin -->
+	<!-- 配置比如时间的格式化，null输出""等等 -->
+	<bean id="fastJsonHttpMessageConverter"
+		class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+		<property name="supportedMediaTypes">
+			<list>
+				<value>application/json;charset=UTF-8</value>
+			</list>
+		</property>
+		<property name="features">
+			<!-- 配置比如时间的格式化，null输出""等等 -->
+			<list>
+				<!-- 配置比如时间的格式化，null输出""等等 -->
+				<value>WriteNullBooleanAsFalse</value>
+				<value>WriteEnumUsingToString</value>
+				<value>QuoteFieldNames</value>
+				<value>WriteDateUseDateFormat</value>
+				<value>WriteNullStringAsEmpty</value>
+			</list>
+		</property>
+	</bean>
+	<!-- fastJSON 处理end -->
+	<!-- Handles HTTP GET requests for /static/** by efficiently serving up 
+		static resources in the ${webappRoot}/static/ directory -->
+	<mvc:resources mapping="/static/**" location="/static/" />
+	<!-- REST中根据URL后缀自动判定Content-Type及相应的View -->
+	<bean id="contentNegotiationManager"
+		class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+		<!-- 扩展名至mimeType的映射,即 /user.json => application/json -->
+		<property name="favorParameter" value="true" />
+		<!-- 用于开启 /userinfo/123?format=json 的支持 -->
+		<property name="parameterName" value="format" />
+		<!-- 是否忽略Accept Header -->
+		<property name="ignoreAcceptHeader" value="true" />
+		<property name="mediaTypes">
+			<map>
+				<entry key="html" value="text/html" />
+				<entry key="pdf" value="application/pdf" />
+				<entry key="xsl" value="application/vnd.ms-excel" />
+				<entry key="xml" value="application/xml" />
+				<entry key="json" value="application/json" />
+				<entry key="jsonp" value="application/javascript" />
+			</map>
+		</property>
+		<property name="defaultContentType" value="text/html" />
+	</bean>
+	<!-- ========================= VIEW定义 ========================= -->
+	<!-- 视图控制器配置 begin -->
+	<bean id="defaultViewResolver"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver"
+		p:order="1">
+		<property name="prefix" value="" />
+		<property name="suffix" value=".ftl" />
+		<property name="contentType" value="text/html;charset=UTF-8" />
+		<property name="requestContextAttribute" value="request" />
+	</bean>
+	<!-- 内容协商视图解析器；根据客户端的不同的请求决定不同的 view进行响应, -->
+	<!-- 会自动根据解析的contentType来决定使用哪个视图解析器（默认使用整个web应用中的viewResolver） -->
+	<bean
+		class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver"
+		p:order="0">
+		<!-- 内容协商管理器 用于决定media type -->
+		<property name="contentNegotiationManager" ref="contentNegotiationManager" />
+		<!-- 默认视图 放在解析链最后 -->
+		<property name="defaultViews">
+			<list>
+				<!-- <bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"/> -->
+				<!-- <bean class="com.alibaba.fastjson.support.spring.FastJsonJsonView" 
+					/> -->
+				<bean class="com.im.core.support.view.JsonpView" />
+				<!-- 添加JSONP视图支持 -->
+				<!-- 导出xml 暂不使用 -->
+				<!-- <bean name="xStreamMarshallingView" class="org.springframework.web.servlet.view.xml.MarshallingView"> 
+					<property name="marshaller"> <bean class="org.springframework.oxm.xstream.XStreamMarshaller" 
+					/> </property> </bean> -->
+				<!-- 导出excel 暂不使用 -->
+			</list>
+		</property>
+	</bean>
+	<!-- 视图控制器配置 end -->
+	<!-- 模板配置 begin -->
+	<bean id="freemarkerConfigurer"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+		<property name="templateLoaderPath" value="/WEB-INF/tpl" />
+		<property name="freemarkerVariables">
+			<map></map>
+		</property>
+		<property name="freemarkerSettings">
+			<props>
+				<prop key="tag_syntax">auto_detect</prop>
+				<prop key="template_update_delay">5</prop>
+				<prop key="defaultEncoding">UTF-8</prop>
+				<prop key="url_escaping_charset">UTF-8</prop>
+				<prop key="locale">zh_CN</prop>
+				<prop key="boolean_format">true,false</prop>
+				<prop key="datetime_format">yyyy-MM-dd HH:mm:ss</prop>
+				<prop key="date_format">yyyy-MM-dd</prop>
+				<prop key="time_format">HH:mm:ss</prop>
+				<prop key="number_format">0.######</prop>
+				<prop key="whitespace_stripping">true</prop>
+			</props>
+		</property>
+	</bean>
+	<!-- 模板配置 end -->
+	<!-- 控制器异常处理 begin -->
+	<bean id="exceptionHandlerExceptionResolver"
+		class="org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver">
+		<property name="contentNegotiationManager" ref="contentNegotiationManager" />
+	</bean>
+	<!-- 控制器异常处理 end -->
+</beans>

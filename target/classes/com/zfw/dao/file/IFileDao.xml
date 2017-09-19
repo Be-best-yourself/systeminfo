@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zfw.dao.file.IFileDao">
+	<resultMap type="com.zfw.entity.file.FileEntity" id="FileEntityMapper">
+		<id column="id" property="id" />
+		<result column="file_code" property="fileCode" />
+		<result column="file_name" property="fileName" />
+		<result column="file_path" property="filePath" />
+		<result column="file_type" property="fileType" />
+		<result column="modify_time" property="modifyTime" />
+		<result column="file_level" property="fileLevel" />
+		<result column="is_directory" property="isDirectory" />
+		<result column="parent_path" property="parentPath" />
+		<result column="file_size" property="fileSize" />
+		<result column="permission" property="permission" />
+		<result column="create_time" property="createTime" />
+		<result column="oper_times" property="operTimes" />
+		<result column="visit_times" property="visitTimes" />
+
+	</resultMap>
+
+	<insert id="insertFile">
+		insert into
+			t_file( file_code,
+			file_name,
+			file_path,
+			file_type,
+			modify_Time,
+			file_level,
+			is_directory,
+			parent_path,
+			file_size ,
+			permission,
+			create_time,
+			oper_times,
+			visit_times)
+		values
+		(#{fileCode},#{fileName},#{filePath},#{fileType},#{modifyTime},#{fileLevel},#{isDirectory},#{parentPath},#{fileSize},#{permission},#{createTime},#{operTimes},#{visitTimes})
+	</insert>
+	<insert id="insertFileCatchId">
+		insert into
+		t_file(file_code,file_name,file_path,file_type,modifyTime,file_level,is_directory,parent_path,file_size,,permission,create_time,oper_times,visit_times)
+		values
+		(#{fileCode},#{fileName},#{filePath},#{fileType},#{modifyTime},#{fileLevel},#{isDirectory},#{parentPath},#{fileSize},#{permission},#{createTime},#{operTimes},#{visitTimes})
+		<selectKey keyProperty="id" resultType="int" order="AFTER">
+			select
+			@@identity
+		</selectKey>
+	</insert>
+</mapper>

@@ -1,0 +1,1 @@
+<bashPath value="${pageContext.request.scheme}://${pageContext.request.serverName}:${pageContext.request.serverPort}/${pageContext.request.contextPath}"></bashPath>
