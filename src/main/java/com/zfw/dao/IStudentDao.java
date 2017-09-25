@@ -16,7 +16,7 @@ public interface IStudentDao {
 	Student selectStudentById(int id);
 
 	List<Student> selectAllStudent();
-	//写点注释，测试push
+
 	List<Student> selectStudentByName(String name);
 	
 }
